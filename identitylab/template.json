@@ -70,7 +70,7 @@
             "type": "Microsoft.Network/networkSecurityGroups",
             "apiVersion": "2019-11-01",
             "name": "[parameters('networkSecurityGroups_DCLAB01_nsg_name')]",
-            "location": "northcentralus",
+            "location": "centralus",
             "properties": {
                 "securityRules": []
             }
@@ -79,7 +79,7 @@
             "type": "Microsoft.Network/publicIPAddresses",
             "apiVersion": "2019-11-01",
             "name": "[parameters('publicIPAddresses_DCLAB01_ip_name')]",
-            "location": "northcentralus",
+            "location": "centralus",
             "sku": {
                 "name": "Basic"
             },
@@ -94,7 +94,7 @@
             "type": "Microsoft.Network/publicIPAddresses",
             "apiVersion": "2019-11-01",
             "name": "[parameters('publicIPAddresses_IdentityLab_bastion_ip_name')]",
-            "location": "northcentralus",
+            "location": "centralus",
             "sku": {
                 "name": "Standard"
             },
@@ -109,7 +109,7 @@
             "type": "Microsoft.Network/virtualNetworks",
             "apiVersion": "2019-11-01",
             "name": "[parameters('virtualNetworks_IdentityLab_vnet_name')]",
-            "location": "northcentralus",
+            "location": "centralus",
             "properties": {
                 "addressSpace": {
                     "addressPrefixes": [
@@ -148,7 +148,7 @@
             "type": "Microsoft.Compute/virtualMachines",
             "apiVersion": "2019-07-01",
             "name": "[parameters('virtualMachines_DCLAB01_name')]",
-            "location": "northcentralus",
+            "location": "centralus",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_DCLAB01_nic_name'))]"
             ],
@@ -233,7 +233,7 @@
             "type": "Microsoft.Network/bastionHosts",
             "apiVersion": "2019-11-01",
             "name": "[parameters('bastionHosts_IdentityLab_bastion_name')]",
-            "location": "northcentralus",
+            "location": "centralus",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_IdentityLab_bastion_ip_name'))]",
                 "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_IdentityLab_vnet_name'), 'AzureBastionSubnet')]"
@@ -260,7 +260,7 @@
             "type": "Microsoft.Network/networkInterfaces",
             "apiVersion": "2019-11-01",
             "name": "[parameters('networkInterfaces_DCLAB01_nic_name')]",
-            "location": "northcentralus",
+            "location": "centralus",
             "dependsOn": [
                 "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_DCLAB01_ip_name'))]",
                 "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_IdentityLab_vnet_name'), 'default')]",
