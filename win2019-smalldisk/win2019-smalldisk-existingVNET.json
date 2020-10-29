@@ -1,0 +1,184 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vmHostname": {
+            "defaultValue": "SERVERNAME",
+            "type": "string",
+            "metadata": {
+              "description": "Will be used as hostname (max 15 characters)"
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+              "description": "Local admin username for the VM"
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+              "description": "Local admin password for the VM"
+            }
+        },
+        "publicIPName": {
+            "defaultValue": "SERVERNAME-ip",
+            "type": "string",
+            "metadata": {
+              "description": "Public IP object name"
+            }
+        },
+        "nicName": {
+            "defaultValue": "SERVERNAME-nic",
+            "type": "string",
+            "metadata": {
+              "description": "NIC object name"
+            }
+        },       
+        "nsgName": {
+            "defaultValue": "SERVERNAME-nsg",
+            "type": "string",
+            "metadata": {
+              "description": "Network security group object name"
+            }
+        },
+        "existingVnetName": {
+            "type": "string",
+            "metadata": {
+              "description": "VNet name to join"
+            }
+        },
+        "existingVnetRG": {  
+            "type": "string",
+            "metadata": {
+              "description": "RG that VNet exists in"
+            }
+        }, 
+        "existingSubnetName": {
+            "type": "string",
+            "metadata": {
+              "description": "Subnet within VNet to join"
+            }
+        }
+    },
+    "variables": {
+        "subnetRef": "[resourceId(parameters('existingVnetRG'), 'Microsoft.Network/virtualNetworks/subnets', parameters('existingVnetName'),  parameters('existingSubnetName'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "2019-11-01",
+            "name": "[parameters('nsgName')]",
+            "location": "centralus",
+            "properties": {
+                "securityRules": []
+            }
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2019-11-01",
+            "name": "[parameters('publicIPName')]",
+            "location": "centralus",
+            "sku": {
+                "name": "Basic"
+            },
+            "properties": {
+                "publicIPAddressVersion": "IPv4",
+                "publicIPAllocationMethod": "Static",
+                "idleTimeoutInMinutes": 4,
+                "ipTags": []
+            }
+        },     
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2019-07-01",
+            "name": "[parameters('vmHostname')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', parameters('nicName'))]"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "Standard_B2s"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "2019-Datacenter-smalldisk",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Windows",
+                        "name": "[concat(parameters('vmHostname'), '-OSDisk')]",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "writeAcceleratorEnabled": false,
+                        "managedDisk": {
+                            "storageAccountType": "Premium_LRS"                       
+                        },
+                        "diskSizeGB": 64
+                    },
+                    "dataDisks": []
+                },
+                "osProfile": {
+                    "computerName": "[parameters('vmHostname')]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true
+                    },
+                    "secrets": [],
+                    "allowExtensionOperations": true
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('nicName'))]",
+                            "properties": {
+                                "primary": true
+                            }
+                        }
+                    ]
+                }
+            }
+        },   
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2019-11-01",
+            "name": "[parameters('nicName')]",
+            "location": "centralus",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPName'))]",
+                "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('nsgName'))]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPName'))]"
+                            },
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            },
+                            "primary": true,
+                            "privateIPAddressVersion": "IPv4"
+                        }
+                    }
+                ],
+                "dnsSettings": {
+                    "dnsServers": []
+                },
+                "enableAcceleratedNetworking": false,
+                "enableIPForwarding": false,
+                "networkSecurityGroup": {
+                    "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('nsgName'))]"
+                }
+            }
+        }
+    ]
+}
